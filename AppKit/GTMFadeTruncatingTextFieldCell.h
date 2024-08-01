@@ -18,8 +18,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
+NS_ASSUME_NONNULL_BEGIN
 
 typedef enum {
   GTMFadeTruncatingTail,
@@ -43,4 +42,4 @@ typedef enum {
 
 @end
 
-#endif
+NS_ASSUME_NONNULL_END

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'GoogleToolboxForMac'
-  s.version          = '2.2.1'
+  s.version          = '4.2.1'
   s.author           = 'Google Inc.'
   s.license          = { :type => 'Apache', :file => 'LICENSE' }
   s.homepage         = 'https://github.com/google/google-toolbox-for-mac'
@@ -12,9 +12,17 @@ Pod::Spec.new do |s|
       to developers working on iOS or OS X projects.
                        DESC
 
-  s.osx.deployment_target = '10.7'
-  s.ios.deployment_target = '8.0'
-  s.tvos.deployment_target = '9.0'
+  # Ensure developers won't hit CocoaPods/CocoaPods#11402 with the resource
+  # bundle for the privacy manifest.
+  s.cocoapods_version = '>= 1.12.0'
+
+  osx_deployment_target = '10.12'
+  ios_deployment_target = '10.0'
+  tvos_deployment_target = '10.0'
+
+  s.osx.deployment_target = osx_deployment_target
+  s.ios.deployment_target = ios_deployment_target
+  s.tvos.deployment_target = tvos_deployment_target
 
   s.requires_arc = false
 
@@ -23,15 +31,17 @@ Pod::Spec.new do |s|
   # into a shipping app. This has come up a few times issues 130, 138. The current
   # list here is everything that doesn't have a platform requirement and isn't
   # testing only.
-  s.default_subspecs = 'Defines', 'Core', 'GeometryUtils', 'KVO', 'Logger', 'Regex',
-                       'StringEncoding', 'SystemVersion', 'URLBuilder', 'NSData+zlib',
-                       'NSDictionary+URLArguments', 'NSFileHandle+UniqueName',
-                       'NSScanner+JSON', 'NSString+HTML', 'NSString+URLArguments',
+  s.default_subspecs = 'Defines', 'Core', 'GeometryUtils', 'KVO', 'Logger',
+                       'StringEncoding', 'NSData+zlib',
+                       'NSFileHandle+UniqueName', 'NSString+HTML',
                        'NSString+XML', 'NSThread+Blocks'
 
   s.subspec 'Defines' do |sp|
     sp.public_header_files = 'GTMDefines.h'
     sp.source_files = 'GTMDefines.h'
+    sp.resource_bundle = {
+      "GoogleToolboxForMac_Privacy" => "Resources/Base/PrivacyInfo.xcprivacy"
+    }
   end
 
   s.subspec 'Core' do |sp|
@@ -66,17 +76,15 @@ Pod::Spec.new do |s|
   s.subspec 'Logger' do |sp|
     sp.source_files = 'Foundation/GTMLogger.{h,m}'
     sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
+    sp.resource_bundle = {
+      "GoogleToolboxForMac_Logger_Privacy" => "Resources/Logger/PrivacyInfo.xcprivacy"
+    }
   end
 
-  # We cannot add a target for Foundaat/GTMLogger+ASL.{h,m}.
+  # We cannot add a target for Foundation/GTMLogger+ASL.{h,m}.
   # asl.h is not a modular header, and so cannot be imported
   # in a modulemap, which CocoaPods does by default when it
   # creates frameworks.
-
-  s.subspec 'Regex' do |sp|
-    sp.source_files = 'Foundation/GTMRegex.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-  end
 
   # We cannot add a target for Foundation/GTMSQLite.{h,m}.
   # sqlite3.h is not a modular header, and so cannot be imported
@@ -93,20 +101,6 @@ Pod::Spec.new do |s|
     sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
   end
 
-  s.subspec 'SystemVersion' do |sp|
-    sp.source_files = 'Foundation/GTMSystemVersion.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-  end
-
-  s.subspec 'URLBuilder' do |sp|
-    sp.source_files = 'Foundation/GTMURLBuilder.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/Core', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/NSDictionary+URLArguments', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/NSString+URLArguments', "#{s.version}"
-  end
-
-
   s.subspec 'NSData+zlib' do |sp|
     sp.source_files = 'Foundation/GTMNSData+zlib.{h,m}'
     sp.requires_arc = 'Foundation/GTMNSData+zlib.{h,m}'
@@ -114,31 +108,14 @@ Pod::Spec.new do |s|
     sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
   end
 
-  s.subspec 'NSDictionary+URLArguments' do |sp|
-    sp.source_files = 'Foundation/GTMNSDictionary+URLArguments.{h,m}'
-    sp.requires_arc = 'Foundation/GTMNSDictionary+URLArguments.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/DebugUtils', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/NSString+URLArguments', "#{s.version}"
-  end
-
   s.subspec 'NSFileHandle+UniqueName' do |sp|
     sp.source_files = 'Foundation/GTMNSFileHandle+UniqueName.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-  end
-
-  s.subspec 'NSScanner+JSON' do |sp|
-    sp.source_files = 'Foundation/GTMNSScanner+JSON.{h,m}'
     sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
   end
 
   s.subspec 'NSString+HTML' do |sp|
     sp.source_files = 'Foundation/GTMNSString+HTML.{h,m}'
     sp.dependency 'GoogleToolboxForMac/Core', "#{s.version}"
-  end
-
-  s.subspec 'NSString+URLArguments' do |sp|
-    sp.source_files = 'Foundation/GTMNSString+URLArguments.{h,m}'
   end
 
   s.subspec 'NSString+XML' do |sp|
@@ -157,7 +134,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'iPhone' do |sp|
-    sp.platform = :ios, '5.0'
+    sp.platform = :ios, ios_deployment_target
     sp.source_files =
         'iPhone/GTMFadeTruncatingLabel.{h,m}',
         'iPhone/GTMUIImage+Resize.{h,m}',
@@ -167,7 +144,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'RoundedRectPath' do |sp|
-    sp.platform = :ios, '5.0'
+    sp.platform = :ios, ios_deployment_target
     sp.source_files = 'iPhone/GTMRoundedRectPath.{h,m}'
     sp.requires_arc = 'iPhone/GTMRoundedRectPath.{h,m}'
     sp.frameworks = 'CoreGraphics'
@@ -175,30 +152,22 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'UIFont+LineHeight' do |sp|
-    sp.platform = :ios, '5.0'
+    sp.platform = :ios, ios_deployment_target
     sp.source_files = 'iPhone/GTMUIFont+LineHeight.{h,m}'
     sp.requires_arc = 'iPhone/GTMUIFont+LineHeight.{h,m}'
   end
 
   s.subspec 'UnitTesting' do |sp|
-    sp.platform = :ios, '5.0'
-    sp.source_files =
-        'UnitTesting/GTMFoundationUnitTestingUtilities.{h,m}',
-        'UnitTesting/GTMSenTestCase.{h,m}',
-        'UnitTesting/GTMTestTimer.h',
-    sp.frameworks = 'CoreGraphics', 'QuartzCore'
+    sp.source_files = 'UnitTesting/GTMSenTestCase.{h,m}'
+    sp.frameworks = 'XCTest'
     sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/Regex', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/SystemVersion', "#{s.version}"
-  end
-
-  s.subspec 'UnitTestingAppLib' do |sp|
-    sp.platform = :ios, '5.0'
-    sp.source_files =
-        'UnitTesting/GTMCodeCoverageApp.h',
-        'UnitTesting/GTMIPhoneUnitTestDelegate.{h,m}'
-    sp.dependency 'GoogleToolboxForMac/Defines', "#{s.version}"
-    sp.dependency 'GoogleToolboxForMac/UnitTesting', "#{s.version}"
+    # Enable GTMSenTestCase.h to find <XCTest/XCTest.h>
+    sp.pod_target_xcconfig = {
+      'ENABLE_TESTING_SEARCH_PATHS'=>'YES',
+    }
+    sp.user_target_xcconfig = {
+      'ENABLE_TESTING_SEARCH_PATHS'=>'YES',
+    }
   end
 
 end

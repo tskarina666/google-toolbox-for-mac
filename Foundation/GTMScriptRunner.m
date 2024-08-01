@@ -32,39 +32,27 @@ static BOOL LaunchNSTaskCatchingExceptions(NSTask *task);
 
 @implementation GTMScriptRunner
 
-+ (GTMScriptRunner *)runner {
++ (instancetype)runner {
   return [[[self alloc] init] autorelease];
 }
 
-+ (GTMScriptRunner *)runnerWithBash {
-  return [self runnerWithInterpreter:@"/bin/bash"];
-}
-
-+ (GTMScriptRunner *)runnerWithPerl {
-  return [self runnerWithInterpreter:@"/usr/bin/perl"];
-}
-
-+ (GTMScriptRunner *)runnerWithPython {
-  return [self runnerWithInterpreter:@"/usr/bin/python"];
-}
-
-+ (GTMScriptRunner *)runnerWithInterpreter:(NSString *)interp {
++ (instancetype)runnerWithInterpreter:(NSString *)interp {
   return [self runnerWithInterpreter:interp withArgs:nil];
 }
 
-+ (GTMScriptRunner *)runnerWithInterpreter:(NSString *)interp withArgs:(NSArray *)args {
++ (instancetype)runnerWithInterpreter:(NSString *)interp withArgs:(NSArray *)args {
   return [[[self alloc] initWithInterpreter:interp withArgs:args] autorelease];
 }
 
-- (id)init {
-  return [self initWithInterpreter:nil];
+- (instancetype)init {
+  return [self initWithInterpreter:@"/bin/sh"];
 }
 
-- (id)initWithInterpreter:(NSString *)interp {
+- (instancetype)initWithInterpreter:(NSString *)interp {
   return [self initWithInterpreter:interp withArgs:nil];
 }
 
-- (id)initWithInterpreter:(NSString *)interp withArgs:(NSArray *)args {
+- (instancetype)initWithInterpreter:(NSString *)interp withArgs:(NSArray *)args {
   if ((self = [super init])) {
     trimsWhitespace_ = YES;
     interpreter_ = [interp copy];
@@ -89,7 +77,7 @@ static BOOL LaunchNSTaskCatchingExceptions(NSTask *task);
 }
 
 - (NSString *)run:(NSString *)cmds {
-  return [self run:cmds standardError:nil];
+  return [self run:cmds standardError:NULL];
 }
 
 - (NSString *)run:(NSString *)cmds standardError:(NSString **)err {
@@ -239,7 +227,7 @@ static BOOL LaunchNSTaskCatchingExceptions(NSTask *task);
                             autorelease];
   NSString *errString = [[[NSString alloc] initWithData:mutableErr
                                                encoding:NSUTF8StringEncoding]
-                            autorelease];;
+                            autorelease];
   if (trimsWhitespace_) {
     NSCharacterSet *set = [NSCharacterSet whitespaceAndNewlineCharacterSet];
     outString = [outString stringByTrimmingCharactersInSet:set];
@@ -271,7 +259,7 @@ static BOOL LaunchNSTaskCatchingExceptions(NSTask *task);
 }
 
 - (NSString *)runScript:(NSString *)path withArgs:(NSArray *)args {
-  return [self runScript:path withArgs:args standardError:nil];
+  return [self runScript:path withArgs:args standardError:NULL];
 }
 
 - (NSString *)runScript:(NSString *)path withArgs:(NSArray *)args standardError:(NSString **)err {

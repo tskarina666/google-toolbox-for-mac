@@ -16,12 +16,10 @@
 //  the License.
 //
 
+#include <stdlib.h>
+
 #import "GTMDefines.h"
 #import "GTMNSString+XML.h"
-
-// Export a nonsense symbol to suppress a libtool warning when this is linked alone in a static lib.
-__attribute__((visibility("default")))
-    char NSString_GTMNSStringXMLAdditionsExportToSuppressLibToolWarning = 0;
 
 enum {
   kGTMXMLCharModeEncodeQUOT  = 0,
@@ -121,7 +119,9 @@ static NSString *AutoreleasedCloneForXML(NSString *src, BOOL escaping) {
     if (!data) {
       // COV_NF_START  - Memory fail case
       _GTMDevLog(@"couldn't alloc buffer");
-      return nil;
+      // If we can't get enough memory for the buffer copy, odds are finalString
+      // will also run out of memory, so just give up.
+      abort();
       // COV_NF_END
     }
     [src getCharacters:[data mutableBytes]];

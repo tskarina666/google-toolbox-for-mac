@@ -19,10 +19,9 @@
 #import "GTMLogger+ASL.h"
 #import "GTMDefines.h"
 
-
 @implementation GTMLogger (GTMLoggerASLAdditions)
 
-+ (id)standardLoggerWithASL {
++ (instancetype)standardLoggerWithASL {
   id me = [self standardLogger];
   [me setWriter:[[[GTMLogASLWriter alloc] init] autorelease]];
   [me setFormatter:[[[GTMLogASLFormatter alloc] init] autorelease]];
@@ -34,19 +33,23 @@
 
 @implementation GTMLogASLWriter
 
-+ (id)aslWriter {
-  return [[[self alloc] initWithClientClass:nil facility:nil] autorelease];
++ (instancetype)aslWriter {
+  return [[[self alloc] initWithClientClass:[GTMLoggerASLClient class]
+                                   facility:nil] autorelease];
 }
 
-+ (id)aslWriterWithFacility:(NSString *)facility {
-  return [[[self alloc] initWithClientClass:nil facility:facility] autorelease];
++ (instancetype)aslWriterWithFacility:(NSString *)facility {
+  return [[[self alloc] initWithClientClass:[GTMLoggerASLClient class]
+                                   facility:facility] autorelease];
 }
 
-- (id)init {
-  return [self initWithClientClass:nil facility:nil];
+- (instancetype)init {
+  return [self initWithClientClass:[GTMLoggerASLClient class]
+                          facility:nil];
 }
 
-- (id)initWithClientClass:(Class)clientClass facility:(NSString *)facility {
+- (instancetype)initWithClientClass:(Class)clientClass
+                           facility:(NSString *)facility {
   if ((self = [super init])) {
     aslClientClass_ = clientClass;
     if (aslClientClass_ == nil) {
@@ -135,11 +138,15 @@
 
 @implementation GTMLoggerASLClient
 
-- (id)init {
+- (instancetype)init {
   return [self initWithFacility:nil];
 }
 
-- (id)initWithFacility:(NSString *)facility {
+// Disable warnings for the asl_* apis.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+- (instancetype)initWithFacility:(NSString *)facility {
   if ((self = [super init])) {
     client_ = asl_open(NULL, [facility UTF8String], 0);
     if (client_ == NULL) {
@@ -179,5 +186,7 @@
   asl_log(client_, msgOptions_, level, "%s", [msg UTF8String]);
 }
 // COV_NF_END
+
+#pragma clang diagnostic pop
 
 @end  // GTMLoggerASLClient

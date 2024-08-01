@@ -19,7 +19,7 @@
 #import "GTMDefines.h"
 #import <Cocoa/Cocoa.h>
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
+NS_ASSUME_NONNULL_BEGIN
 
 enum {
   GTMColorationBaseHighlight,
@@ -38,7 +38,7 @@ enum {
 typedef NSUInteger GTMColorationUse;
 
 @interface NSColorSpace (GTMNSColorSpaceLuminanceHelpers)
-+ (NSColorSpace *)gtm_labColorSpace;
++ (nullable NSColorSpace *)gtm_labColorSpace;
 @end
 
 @interface NSColor (GTMLuminanceAdditions)
@@ -62,4 +62,4 @@ typedef NSUInteger GTMColorationUse;
 - (NSColor *)gtm_legibleTextColor;
 @end
 
-#endif
+NS_ASSUME_NONNULL_END

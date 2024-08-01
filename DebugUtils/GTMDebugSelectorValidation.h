@@ -34,7 +34,9 @@
 #import <Foundation/Foundation.h>
 #import "GTMDefines.h"
 
-static void GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments(id obj, SEL sel, const char *retType, ...) {
+NS_ASSUME_NONNULL_BEGIN
+
+static void GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments(_Nullable id obj, SEL sel, const char * _Nullable retType, ...) {
 
   // verify that the object's selector is implemented with the proper
   // number and type of arguments
@@ -56,7 +58,7 @@ static void GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments(id obj, 
     while ((expectedArgType = va_arg(argList, const char*)) != 0) {
 
       if ([sig numberOfArguments] > argCount) {
-        const char *foundArgType = [sig getArgumentTypeAtIndex:argCount];
+        const char *foundArgType __unused = [sig getArgumentTypeAtIndex:argCount];
 
         _GTMDevAssert(0 == strncmp(foundArgType, expectedArgType, strlen(expectedArgType)),
                       @"\"%@\" selector \"%@\" argument %u should be type %s",
@@ -77,7 +79,7 @@ static void GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments(id obj, 
 
     // if asked, validate the return type
     if (retType && (strcmp("gtm_skip_return_test", retType) != 0)) {
-      const char *foundRetType = [sig methodReturnType];
+      const char *foundRetType __unused = [sig methodReturnType];
       _GTMDevAssert(0 == strncmp(foundRetType, retType, strlen(retType)),
                     @"\"%@\" selector \"%@\" return type should be type %s",
                     NSStringFromClass([obj class]),
@@ -91,6 +93,8 @@ static void GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments(id obj, 
 
 #define GTMAssertSelectorNilOrImplementedWithArguments(obj, sel, ...) \
   GTMAssertSelectorNilOrImplementedWithReturnTypeAndArguments((obj), (sel), "gtm_skip_return_test", __VA_ARGS__)
+
+NS_ASSUME_NONNULL_END
 
 #else // DEBUG
 

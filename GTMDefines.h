@@ -29,6 +29,8 @@
 #include <Availability.h>
 #endif  // TARGET_OS_IPHONE
 
+NS_ASSUME_NONNULL_BEGIN
+
 // ----------------------------------------------------------------------------
 // CPP symbols that can be overridden in a prefix to control how the toolbox
 // is compiled.
@@ -96,7 +98,7 @@
 // developer level errors.  This implementation simply macros to NSLog/NSAssert.
 // It is not intended to be a general logging/reporting system.
 //
-// Please see http://code.google.com/p/google-toolbox-for-mac/wiki/DevLogNAssert
+// Please see https://github.com/google/google-toolbox-for-mac/blob/main/Docs/Development.md
 // for a little more background on the usage of these macros.
 //
 //    _GTMDevLog           log some error/problem in debug builds
@@ -105,7 +107,7 @@
 //
 // To replace this system, just provide different macro definitions in your
 // prefix header.  Remember, any implementation you provide *must* be thread
-// safe since this could be called by anything in what ever situtation it has
+// safe since this could be called by anything in what ever situation it has
 // been placed in.
 //
 
@@ -130,11 +132,16 @@
 #if !defined(NS_BLOCK_ASSERTIONS)
   #define _GTMDevAssert(condition, ...)                                       \
     do {                                                                      \
-      if (!(condition)) {                                                     \
+      if (__builtin_expect(!(condition), 0)) {                                \
+        NSString *__assert_func_name__ =                                      \
+            [NSString stringWithUTF8String:__PRETTY_FUNCTION__];              \
+        __assert_func_name__ = __assert_func_name__ ?: @"<Unknown Function>"; \
+        NSString *__assert_file_name__ =                                      \
+            [NSString stringWithUTF8String:__FILE__];                         \
+        __assert_file_name__ = __assert_file_name__ ?: @"<Unknown File>";     \
         [[NSAssertionHandler currentHandler]                                  \
-            handleFailureInFunction:(NSString *)                              \
-                                        [NSString stringWithUTF8String:__PRETTY_FUNCTION__] \
-                               file:(NSString *)[NSString stringWithUTF8String:__FILE__]  \
+            handleFailureInFunction:__assert_func_name__                      \
+                               file:__assert_file_name__                      \
                          lineNumber:__LINE__                                  \
                         description:__VA_ARGS__];                             \
       }                                                                       \
@@ -194,12 +201,6 @@
     #define GTM_IPHONE_DEVICE 1
     #define GTM_IPHONE_SIMULATOR 0
   #endif  // TARGET_IPHONE_SIMULATOR
-  // By default, GTM has provided it's own unittesting support, define this
-  // to use the support provided by Xcode, especially for the Xcode4 support
-  // for unittesting.
-  #ifndef GTM_USING_XCTEST
-    #define GTM_USING_XCTEST 0
-  #endif
   #define GTM_MACOS_SDK 0
 #else
   // For MacOS specific stuff
@@ -207,9 +208,6 @@
   #define GTM_IPHONE_SDK 0
   #define GTM_IPHONE_SIMULATOR 0
   #define GTM_IPHONE_DEVICE 0
-  #ifndef GTM_USING_XCTEST
-    #define GTM_USING_XCTEST 0
-  #endif
 #endif
 
 // Some of our own availability macros
@@ -373,3 +371,5 @@
 #endif
 
 #endif  // __OBJC__
+
+NS_ASSUME_NONNULL_END

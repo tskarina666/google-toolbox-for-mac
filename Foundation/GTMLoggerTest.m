@@ -17,7 +17,6 @@
 //
 
 #import "GTMLogger.h"
-#import "GTMRegex.h"
 #import "GTMSenTestCase.h"
 
 
@@ -30,7 +29,7 @@
 - (void)clear;
 @end
 @implementation ArrayWriter
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     messages_ = [[NSMutableArray alloc] init];
   }
@@ -418,6 +417,19 @@
   XCTAssertEqualObjects(msg, @"     ");
 }
 
+// Helper to check if a string is a full match to the given regex pattern.
+static BOOL StringMatchesPattern(NSString *str, NSString *pattern) {
+  NSError *err = nil;
+  NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern
+                                                                         options:0
+                                                                           error:&err];
+  NSCAssert(regex && !err, @"Bad pattern");
+  NSRange match = [regex rangeOfFirstMatchInString:str
+                                           options:0
+                                             range:NSMakeRange(0, str.length)];
+  return match.location == 0 && match.length == str.length;
+}
+
 - (void)testStandardFormatter {
   id<GTMLogFormatter> fmtr = [[[GTMLogStandardFormatter alloc] init] autorelease];
   XCTAssertNotNil(fmtr);
@@ -432,26 +444,26 @@
                             level:kGTMLoggerLevelDebug
                            format:@"test"];
   NSString *pattern = [NSString stringWithFormat:kFormatBasePattern, executableName, @"test"];
-  XCTAssertTrue([msg gtm_matchesPattern:pattern], @"msg: %@", msg);
+  XCTAssertTrue(StringMatchesPattern(msg, pattern), @"msg: %@", msg);
 
   msg = [self stringFromFormatter:fmtr
                             level:kGTMLoggerLevelError
                            format:@"test %d", 1];
   pattern = [NSString stringWithFormat:kFormatBasePattern, executableName, @"test 1"];
-  XCTAssertTrue([msg gtm_matchesPattern:pattern], @"msg: %@", msg);
+  XCTAssertTrue(StringMatchesPattern(msg, pattern), @"msg: %@", msg);
 
   msg = [self stringFromFormatter:fmtr
                             level:kGTMLoggerLevelInfo
                            format:@"test %@", @"hi"];
   pattern = [NSString stringWithFormat:kFormatBasePattern, executableName, @"test hi"];
-  XCTAssertTrue([msg gtm_matchesPattern:pattern], @"msg: %@", msg);
+  XCTAssertTrue(StringMatchesPattern(msg, pattern), @"msg: %@", msg);
 
 
   msg = [self stringFromFormatter:fmtr
                             level:kGTMLoggerLevelUnknown
                            format:@"test"];
   pattern = [NSString stringWithFormat:kFormatBasePattern, executableName, @"test"];
-  XCTAssertTrue([msg gtm_matchesPattern:pattern], @"msg: %@", msg);
+  XCTAssertTrue(StringMatchesPattern(msg, pattern), @"msg: %@", msg);
 }
 
 - (void)testNoFilter {
@@ -464,7 +476,10 @@
   XCTAssertTrue([filter filterAllowsMessage:@"hi" level:kGTMLoggerLevelError]);
   XCTAssertTrue([filter filterAllowsMessage:@"hi" level:kGTMLoggerLevelAssert]);
   XCTAssertTrue([filter filterAllowsMessage:@"" level:kGTMLoggerLevelDebug]);
-  XCTAssertTrue([filter filterAllowsMessage:nil level:kGTMLoggerLevelDebug]);
+
+  // Ensure passing nil doesn't crash, even though it shouldn't be done.
+  id passNil = nil;
+  XCTAssertTrue([filter filterAllowsMessage:passNil level:kGTMLoggerLevelDebug]);
 }
 
 - (void)testMinimumFilter {
@@ -528,7 +543,10 @@
 - (void)testFileHandleCreation {
   NSFileHandle *fh = nil;
 
-  fh = [NSFileHandle fileHandleForLoggingAtPath:nil mode:0644];
+  // Ensure passing nil doesn't crash, even though it shouldn't be done.
+  id passNil = nil;
+
+  fh = [NSFileHandle fileHandleForLoggingAtPath:passNil mode:0644];
   XCTAssertNil(fh);
 
   fh = [NSFileHandle fileHandleForLoggingAtPath:path_ mode:0644];

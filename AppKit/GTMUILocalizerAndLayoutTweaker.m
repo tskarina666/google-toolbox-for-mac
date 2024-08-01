@@ -55,7 +55,7 @@ static const CGFloat kWrapperStringSlop = 0.9;
 @end
 
 @implementation GTMBreakRecordingTypeSetter
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     array_ = [[NSMutableArray alloc] init];
   }
@@ -196,13 +196,8 @@ static const CGFloat kWrapperStringSlop = 0.9;
   [layoutManager setTypesetter:typeSetter];
   // Make sure things are layed out (10.5 has a clean API for this, 10.4
   // doesn't).
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
   [layoutManager ensureLayoutForCharacterRange:NSMakeRange(0,
                                                            [textStorage length])];
-#else
-  [layoutManager lineFragmentRectForGlyphAtIndex:[layoutManager numberOfGlyphs]-1
-                                  effectiveRange:NULL];
-#endif
 
   // Insert the breaks everywere the type setter got asked about breaks.
   NSEnumerator *reverseEnumerator =
@@ -250,8 +245,6 @@ static const CGFloat kWrapperStringSlop = 0.9;
   [textField setFrameSize:newSize];
   return newSize.height - NSHeight(initialFrame);
 }
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
 
 + (CGFloat)sizeToFitFixedHeightTextField:(NSTextField *)textField {
   return [self sizeToFitFixedHeightTextField:textField minWidth:(CGFloat)0];
@@ -326,8 +319,6 @@ static const CGFloat kWrapperStringSlop = 0.9;
   // Return how much things changed
   return finalSize.width - NSWidth(initialRect);
 }
-
-#endif  // MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
 
 + (void)wrapButtonTitleForWidth:(NSButton *)button {
   NSCell *cell = [button cell];
@@ -567,12 +558,10 @@ static NSSize SizeToFit(NSView *view, NSPoint offset) {
     // Don't try to sizeToFit because edit fields really don't want to be sized
     // to what is in them as they are for users to enter things so honor their
     // current size.
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
   } else if ([view isKindOfClass:[NSPathControl class]]) {
     // Don't try to sizeToFit because NSPathControls usually need to be able
     // to display any path, so they shouldn't tight down to whatever they
     // happen to be listing at the moment.
-#endif  // MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
   } else {
     // Genericaly fire a sizeToFit if it has one.
     if ([view respondsToSelector:@selector(sizeToFit)]) {
@@ -599,8 +588,8 @@ static NSSize SizeToFit(NSView *view, NSPoint offset) {
       NSButton *button = (NSButton *)view;
       // -[NSButton sizeToFit] gives much worse results than IB's Size to Fit
       // option for standard push buttons.
-      if (([button bezelStyle] == NSRoundedBezelStyle) &&
-          ([[button cell] controlSize] == NSRegularControlSize)) {
+      if (([button bezelStyle] == NSBezelStyleRounded) &&
+          ([[button cell] controlSize] == NSControlSizeRegular)) {
         // This is the amount of padding IB adds over a sizeToFit, empirically
         // determined.
         const CGFloat kExtraPaddingAmount = 12.0;
@@ -612,8 +601,8 @@ static NSSize SizeToFit(NSView *view, NSPoint offset) {
         if (NSWidth(newFrame) < kMinButtonWidth) {
           newFrame.size.width = kMinButtonWidth;
         }
-      } else if ([button bezelStyle] == NSTexturedRoundedBezelStyle &&
-                 [[button cell] controlSize] == NSRegularControlSize) {
+      } else if ([button bezelStyle] == NSBezelStyleTexturedRounded &&
+                 [[button cell] controlSize] == NSControlSizeRegular) {
         // The round textured style needs to have a little extra padding,
         // otherwise the baseline of the text sinks by a few pixels.
         const CGFloat kExtraPaddingAmount = 4.0;

@@ -19,10 +19,12 @@
 #import <Cocoa/Cocoa.h>
 #import "GTMDefines.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class GTMUILocalizer;
 
 // In addition to the information here, please see the project's documentation
-// (http://code.google.com/p/google-toolbox-for-mac/wiki/UILocalization) for
+// (https://github.com/google/google-toolbox-for-mac/blob/main/Docs/UILocalization.md) for
 // more information and examples.
 
 // This object will run a GTMUILocalizer on the given object, and then run
@@ -56,7 +58,6 @@
 // Returns the amount the field changed height.
 + (CGFloat)sizeToFitFixedWidthTextField:(NSTextField *)textField;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
 // If you call sizeToFit on a NSTextField it will try not to word wrap, so it
 // can get really wide.  This method will keep the height fixed, but figure out
 // how wide the textfield needs to be to fit its text.
@@ -64,7 +65,6 @@
 + (CGFloat)sizeToFitFixedHeightTextField:(NSTextField *)textField;
 + (CGFloat)sizeToFitFixedHeightTextField:(NSTextField *)textField
                                 minWidth:(NSUInteger)minWidth;
-#endif  // MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
 
 // Insert newlines into the title of the button (radio or checkbox) or all cells
 // in the radio group (NSMatrix) so they will word wrap to the item's current
@@ -124,3 +124,5 @@
 // Return the amount we changed our width by on last tweak.
 - (CGFloat)changedWidth;
 @end
+
+NS_ASSUME_NONNULL_END

@@ -18,7 +18,10 @@
 
 
 #import <AppKit/AppKit.h>
+#import <QuartzCore/QuartzCore.h>
 #import "GTMDefines.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 // Given a "normal" duration for an animation, return what it should be based
 // on the current system state. For example, holding down the shift and/or
@@ -30,7 +33,8 @@
 // and in the majority of cases slowing down the animations while navigating
 // around UI elements is not desired.
 NSTimeInterval GTMModifyDurationBasedOnCurrentState(NSTimeInterval duration,
-                                                    NSUInteger eventMask);
+                                                    NSUInteger eventMask)
+  __attribute__((deprecated("This api will be removed in the future as it appears to have no users; if you have need, please report it on the GitHub project immediately.")));
 
 // The standard eventmask that you want for the methods in this file. Some apps
 // (eg Chrome) may not want to have animations fire on key strokes, so will use
@@ -49,18 +53,16 @@ extern const NSUInteger kGTMLeftMouseUpAndKeyDownMask;
 // See notes for GTMModifyDurationBasedOnCurrentState for more info.
 - (id)gtm_initWithDuration:(NSTimeInterval)duration
                  eventMask:(NSUInteger)eventMask
-            animationCurve:(NSAnimationCurve)animationCurve;
+            animationCurve:(NSAnimationCurve)animationCurve
+  __attribute__((deprecated("This api will be removed in the future as it appears to have no users; if you have need, please report it on the GitHub project immediately.")));
 
 // Sets the duration by taking the duration passed in and calling
 // GTMModifyDurationBasedOnCurrentState to calculate the real duration.
 // See notes for GTMModifyDurationBasedOnCurrentState for more info.
 - (void)gtm_setDuration:(NSTimeInterval)duration
-              eventMask:(NSUInteger)eventMask;
+              eventMask:(NSUInteger)eventMask
+  __attribute__((deprecated("This api will be removed in the future as it appears to have no users; if you have need, please report it on the GitHub project immediately.")));
 @end
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
-
-#import <QuartzCore/QuartzCore.h>
 
 @interface NSAnimationContext (GTMNSAnimationDurationAdditions)
 
@@ -68,7 +70,8 @@ extern const NSUInteger kGTMLeftMouseUpAndKeyDownMask;
 // GTMModifyDurationBasedOnCurrentState to calculate the real duration.
 // See notes for GTMModifyDurationBasedOnCurrentState for more info.
 - (void)gtm_setDuration:(NSTimeInterval)duration
-              eventMask:(NSUInteger)eventMask;
+              eventMask:(NSUInteger)eventMask
+  __attribute__((deprecated("This api will be removed in the future as it appears to have no users; if you have need, please report it on the GitHub project immediately.")));
 @end
 
 @interface CAAnimation (GTMCAAnimationDurationAdditions)
@@ -77,7 +80,8 @@ extern const NSUInteger kGTMLeftMouseUpAndKeyDownMask;
 // GTMModifyDurationBasedOnCurrentState to calculate the real duration.
 // See notes for GTMModifyDurationBasedOnCurrentState for more info.
 - (void)gtm_setDuration:(CFTimeInterval)duration
-              eventMask:(NSUInteger)events;
+              eventMask:(NSUInteger)events
+  __attribute__((deprecated("This api will be removed in the future as it appears to have no users; if you have need, please report it on the GitHub project immediately.")));
 @end
 
-#endif  // MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
+NS_ASSUME_NONNULL_END

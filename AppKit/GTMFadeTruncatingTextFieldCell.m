@@ -17,15 +17,13 @@
 
 #import "GTMFadeTruncatingTextFieldCell.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
-
 @implementation GTMFadeTruncatingTextFieldCell
 - (void)awakeFromNib {
   // Force to clipping
   [self setLineBreakMode:NSLineBreakByClipping];
 }
 
-- (id)initTextCell:(NSString *)aString {
+- (instancetype)initTextCell:(NSString *)aString {
   self = [super initTextCell:aString];
   if (self) {
     // Force to clipping
@@ -50,8 +48,7 @@
 
   if ([self drawsBackground]) {
     [[self backgroundColor] set];
-    NSRectFillUsingOperation(backgroundRect,
-                             NSCompositeSourceOver);
+    NSRectFillUsingOperation(backgroundRect, NSCompositingOperationSourceOver);
   }
 
   [NSGraphicsContext saveGraphicsState];
@@ -174,7 +171,8 @@
   [NSGraphicsContext saveGraphicsState];
   if ([self drawsBackground]) {
     [[self backgroundColor] set];
-    NSRectFillUsingOperation(solidBackgroundPart, NSCompositeSourceOver);
+    NSRectFillUsingOperation(solidBackgroundPart,
+                             NSCompositingOperationSourceOver);
   }
   // We draw the text ourselves because [super drawInteriorWithFrame:inView:]
   // doesn't draw correctly if the cell draws its own background.
@@ -182,7 +180,7 @@
   [attributedString drawInRect:offsetTitleRect];
   [NSGraphicsContext restoreGraphicsState];
 
-  NSColor *startColor = [self textColor];;
+  NSColor *startColor = [self textColor];
   NSColor *endColor = [startColor colorWithAlphaComponent:0.0];
   NSGradient *mask = [[NSGradient alloc] initWithStartingColor:startColor
                                                    endingColor:endColor];
@@ -233,5 +231,3 @@
 }
 
 @end
-
-#endif

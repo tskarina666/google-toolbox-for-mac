@@ -20,15 +20,11 @@
 
 #include <unistd.h>
 
-// Export a nonsense symbol to suppress a libtool warning when this is linked alone in a static lib.
-__attribute__((visibility("default")))
-    char GTMFileHandleUniqueNameExportToSuppressLibToolWarning = 0;
-
 
 @implementation NSFileHandle (GTMFileHandleUniqueNameAdditions)
 
-+ (id)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)pathTemplate
-                                finalPath:(NSString **)path {
++ (instancetype)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)pathTemplate
+                                          finalPath:(NSString **)path {
   if (!pathTemplate) return nil;
   NSString *extension = [pathTemplate pathExtension];
   char *pathTemplateCString = strdup([pathTemplate fileSystemRepresentation]);
@@ -53,17 +49,17 @@ __attribute__((visibility("default")))
   return handle;
 }
 
-+ (id)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)nameTemplate
-                              inDirectory:(NSString *)directory
-                                finalPath:(NSString **)path {
++ (instancetype)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)nameTemplate
+                                        inDirectory:(NSString *)directory
+                                          finalPath:(NSString **)path {
   NSString *fullPath = [directory stringByAppendingPathComponent:nameTemplate];
   return [self gtm_fileHandleWithUniqueNameBasedOn:fullPath finalPath:path];
 }
 
-+ (id)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)nameTemplate
-                              inDirectory:(NSSearchPathDirectory)directory
-                               domainMask:(NSSearchPathDomainMask)mask
-                                finalPath:(NSString **)path {
++ (instancetype)gtm_fileHandleWithUniqueNameBasedOn:(NSString *)nameTemplate
+                                        inDirectory:(NSSearchPathDirectory)directory
+                                         domainMask:(NSSearchPathDomainMask)mask
+                                          finalPath:(NSString **)path {
   NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(directory,
                                                              mask,
                                                              YES);
@@ -74,8 +70,8 @@ __attribute__((visibility("default")))
                                          finalPath:path];
 }
 
-+ (id)gtm_fileHandleForTemporaryFileBasedOn:(NSString *)nameTemplate
-                                  finalPath:(NSString **)path {
++ (instancetype)gtm_fileHandleForTemporaryFileBasedOn:(NSString *)nameTemplate
+                                            finalPath:(NSString **)path {
   return [self gtm_fileHandleWithUniqueNameBasedOn:nameTemplate
                                        inDirectory:NSTemporaryDirectory()
                                          finalPath:path];

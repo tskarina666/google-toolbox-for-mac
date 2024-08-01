@@ -35,7 +35,7 @@
 @end
 
 @implementation GTMUILocalizer
-- (id)initWithBundle:(NSBundle *)bundle {
+- (instancetype)initWithBundle:(NSBundle *)bundle {
   if ((self = [super init])) {
     bundle_ = [bundle retain];
   }
@@ -69,10 +69,8 @@
     Class class = [NSWindowController class];
     if ([owner isKindOfClass:class] && ![owner isMemberOfClass:class]) {
       newBundle = [NSBundle bundleForClass:[owner class]];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
     } else if ([owner isKindOfClass:[NSViewController class]]) {
       newBundle = [(NSViewController *)owner nibBundle];
-#endif
     }
     if (!newBundle) {
       newBundle = [NSBundle mainBundle];
@@ -101,11 +99,9 @@
     if ([object isKindOfClass:[NSWindowController class]]) {
       NSWindow *window = [object window];
       [self localizeWindow:window recursively:recursive];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
     } else if ([object isKindOfClass:[NSViewController class]]) {
         NSView *view = [object view];
         [self localizeView:view recursively:recursive];
-#endif
     } else if ([object isKindOfClass:[NSMenu class]]) {
       [self localizeMenu:(NSMenu *)object recursively:recursive];
     } else if ([object isKindOfClass:[NSWindow class]]) {
@@ -407,8 +403,6 @@
 }
 
 - (void)localizeAccessibility:(id)object {
-#if defined(MAC_OS_X_VERSION_10_10) && \
-    MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
   id<NSAccessibility> accessible = object;
   if ([accessible conformsToProtocol:@protocol(NSAccessibility)]) {
     NSString* help = [accessible accessibilityHelp];
@@ -417,21 +411,6 @@
       [accessible setAccessibilityHelp:localizedHelp];
     }
   }
-#else
-  NSArray *supportedAttrs = [object accessibilityAttributeNames];
-  if ([supportedAttrs containsObject:NSAccessibilityHelpAttribute]) {
-    NSString *accessibilityHelp
-      = [object accessibilityAttributeValue:NSAccessibilityHelpAttribute];
-    if (accessibilityHelp) {
-      NSString *localizedAccessibilityHelp
-        = [self localizedStringForString:accessibilityHelp];
-      if (localizedAccessibilityHelp) {
-        [object accessibilitySetValue:localizedAccessibilityHelp
-                         forAttribute:NSAccessibilityHelpAttribute];
-      }
-    }
-  }
-#endif
 
   // We cannot do the same thing with NSAccessibilityDescriptionAttribute; see
   // the links in the header file for more details.

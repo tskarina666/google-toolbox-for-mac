@@ -18,6 +18,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 // A class for localizing nibs by doing simple string replacement.
 // To use this, make an instance of GTMUILocalizer in your nib. Connect the
 // owner_ outlet of the your instance to the File Owner of the nib. It expects
@@ -78,7 +80,7 @@
  @private
   NSBundle *bundle_;
 }
-- (id)initWithBundle:(NSBundle *)bundle;
+- (instancetype)initWithBundle:(NSBundle *)bundle;
 
 // Localize |object|. If |recursive| is true, it will attempt
 // to localize objects owned/referenced by |object|.
@@ -88,8 +90,10 @@
 // way to go about getting localized strings.
 // If |string| does not start with ^ you should return nil.
 // If |string| is nil, you should return nil
-- (NSString *)localizedStringForString:(NSString *)string;
+- (nullable NSString *)localizedStringForString:(nullable NSString *)string;
 
 // Allows subclasses to override how the bundle is picked up
 + (NSBundle *)bundleForOwner:(id)owner;
 @end
+
+NS_ASSUME_NONNULL_END

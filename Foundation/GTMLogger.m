@@ -42,13 +42,13 @@ static GTMLogger *gSharedLogger = nil;
 
 // Returns a pointer to the shared logger instance. If none exists, a standard
 // logger is created and returned.
-+ (id)sharedLogger {
++ (instancetype)sharedLogger {
   @synchronized(self) {
     if (gSharedLogger == nil) {
       gSharedLogger = [[self standardLogger] retain];
     }
+    return [[gSharedLogger retain] autorelease];
   }
-  return [[gSharedLogger retain] autorelease];
 }
 
 + (void)setSharedLogger:(GTMLogger *)logger {
@@ -58,7 +58,7 @@ static GTMLogger *gSharedLogger = nil;
   }
 }
 
-+ (id)standardLogger {
++ (instancetype)standardLogger {
   // Don't trust NSFileHandle not to throw
   @try {
     id<GTMLogWriter> writer = [NSFileHandle fileHandleWithStandardOutput];
@@ -75,7 +75,7 @@ static GTMLogger *gSharedLogger = nil;
   return nil;
 }
 
-+ (id)standardLoggerWithStderr {
++ (instancetype)standardLoggerWithStderr {
   // Don't trust NSFileHandle not to throw
   @try {
     id me = [self standardLogger];
@@ -88,7 +88,7 @@ static GTMLogger *gSharedLogger = nil;
   return nil;
 }
 
-+ (id)standardLoggerWithStdoutAndStderr {
++ (instancetype)standardLoggerWithStdoutAndStderr {
   // We're going to take advantage of the GTMLogger to GTMLogWriter adaptor
   // and create a composite logger that an outer "standard" logger can use
   // as a writer. Our inner loggers should apply no formatting since the main
@@ -126,7 +126,7 @@ static GTMLogger *gSharedLogger = nil;
   return nil;
 }
 
-+ (id)standardLoggerWithPath:(NSString *)path {
++ (instancetype)standardLoggerWithPath:(NSString *)path {
   @try {
     NSFileHandle *fh = [NSFileHandle fileHandleForLoggingAtPath:path mode:0644];
     if (fh == nil) return nil;
@@ -140,25 +140,25 @@ static GTMLogger *gSharedLogger = nil;
   return nil;
 }
 
-+ (id)loggerWithWriter:(id<GTMLogWriter>)writer
-             formatter:(id<GTMLogFormatter>)formatter
-                filter:(id<GTMLogFilter>)filter {
++ (instancetype)loggerWithWriter:(id<GTMLogWriter>)writer
+                       formatter:(id<GTMLogFormatter>)formatter
+                          filter:(id<GTMLogFilter>)filter {
   return [[[self alloc] initWithWriter:writer
                              formatter:formatter
                                 filter:filter] autorelease];
 }
 
-+ (id)logger {
++ (instancetype)logger {
   return [[[self alloc] init] autorelease];
 }
 
-- (id)init {
+- (instancetype)init {
   return [self initWithWriter:nil formatter:nil filter:nil];
 }
 
-- (id)initWithWriter:(id<GTMLogWriter>)writer
-           formatter:(id<GTMLogFormatter>)formatter
-              filter:(id<GTMLogFilter>)filter {
+- (instancetype)initWithWriter:(id<GTMLogWriter>)writer
+                     formatter:(id<GTMLogFormatter>)formatter
+                        filter:(id<GTMLogFilter>)filter {
   if ((self = [super init])) {
     [self setWriter:writer];
     [self setFormatter:formatter];
@@ -171,6 +171,7 @@ static GTMLogger *gSharedLogger = nil;
   // Unlikely, but |writer_| may be an NSFileHandle, which can throw
   @try {
     [formatter_ release];
+    [self notifyFilterBeforeDetachIfNeeded];
     [filter_ release];
     [writer_ release];
   }
@@ -229,6 +230,7 @@ static GTMLogger *gSharedLogger = nil;
 
 - (void)setFilter:(id<GTMLogFilter>)filter {
   @synchronized(self) {
+    [self notifyFilterBeforeDetachIfNeeded];
     [filter_ autorelease];
     filter_ = nil;
     if (filter == nil) {
@@ -241,7 +243,22 @@ static GTMLogger *gSharedLogger = nil;
     } else {
       filter_ = [filter retain];
     }
+    [self notifyFilterAfterAttachIfNeeded];
   }
+}
+
+- (void)notifyFilterBeforeDetachIfNeeded {
+  if (![filter_ respondsToSelector:@selector(willDetachFromLogger)]) {
+    return;
+  }
+  [filter_ willDetachFromLogger];
+}
+
+- (void)notifyFilterAfterAttachIfNeeded {
+  if (![filter_ respondsToSelector:@selector(didAttachToLogger)]) {
+    return;
+  }
+  [filter_ didAttachToLogger];
 }
 
 - (void)logDebug:(NSString *)fmt, ... {
@@ -333,7 +350,7 @@ static GTMLogger *gSharedLogger = nil;
 
 @implementation NSFileHandle (GTMFileHandleLogWriter)
 
-+ (id)fileHandleForLoggingAtPath:(NSString *)path mode:(mode_t)mode {
++ (instancetype)fileHandleForLoggingAtPath:(NSString *)path mode:(mode_t)mode {
   int fd = -1;
   if (path) {
     int flags = O_WRONLY | O_APPEND | O_CREAT;
@@ -437,7 +454,7 @@ static GTMLogger *gSharedLogger = nil;
 
 @implementation GTMLogStandardFormatter
 
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     dateFormatter_ = [[NSDateFormatter alloc] init];
     [dateFormatter_ setFormatterBehavior:NSDateFormatterBehavior10_4];
@@ -500,32 +517,31 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
 }
 // COV_NF_END
 
+@interface GTMLogLevelFilter ()
+
+@property (atomic) BOOL verboseLoggingEnabled;
+
+@end
+
 @implementation GTMLogLevelFilter
 
-- (id)init {
+- (instancetype)init {
   self = [super init];
   if (self) {
-    // Keep a reference to standardUserDefaults, avoiding a crash if client code calls
-    // "NSUserDefaults resetStandardUserDefaults" which releases it from memory. We are still
-    // notified of changes through our instance. Note: resetStandardUserDefaults does not actually
-    // clear settings:
-    // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSUserDefaults_Class/index.html#//apple_ref/occ/clm/NSUserDefaults/resetStandardUserDefaults
-    // and so should only be called in test code if necessary.
-    userDefaults_ = [[NSUserDefaults standardUserDefaults] retain];
-    [userDefaults_ addObserver:self
-                    forKeyPath:kVerboseLoggingKey
-                       options:NSKeyValueObservingOptionNew
-                       context:nil];
-
-    verboseLoggingEnabled_ = IsVerboseLoggingEnabled(userDefaults_);
+    self.verboseLoggingEnabled = IsVerboseLoggingEnabled(userDefaults_);
   }
 
   return self;
 }
 
 - (void)dealloc {
-  [userDefaults_ removeObserver:self forKeyPath:kVerboseLoggingKey];
-  [userDefaults_ release];
+  _GTMDevAssert(!userDefaults_,
+                @"The user defaults instance is still retained, which means "
+                @"there was a missing `willDetachFromLogger` call. It is "
+                @"important to balance the `didAttachToLogger` call with a "
+                @"`willDetachFromLogger` call because those methods "
+                @"register/unregister the `GTMLogLevelFilter` instance as an "
+                @"observer of the user defaults instance.");
 
   [super dealloc];
 }
@@ -544,7 +560,7 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
       allow = NO;
       break;
     case kGTMLoggerLevelInfo:
-      allow = verboseLoggingEnabled_;
+      allow = self.verboseLoggingEnabled;
       break;
     case kGTMLoggerLevelError:
       allow = YES;
@@ -560,13 +576,64 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
   return allow;
 }
 
+- (void)didAttachToLogger {
+  [self startObservingUserDefaultsIfNeeded];
+}
+
+- (void)willDetachFromLogger {
+  // Unregistration needs to happen earlier than dealloc to avoid the following
+  // race condition:
+  // 1. [Thread A] A GTMLogLevelFilter instance is initialized. It starts to
+  //               observe NSUserDefaults.
+  // 2. [Thread A] The instance is released and is starting to be deallocated.
+  //               Its dealloc has not been executed yet, so the instance is
+  //               still registered as an observer.
+  // 3. [Thread B] A user defaults value is modified. NSUserDefaults prepares to
+  //               notify observers by retaining its observers. The
+  //               GTMLogLevelFilter instance is successfully “retained” even
+  //               though it is being deallocated.
+  // 4. [Thread A] The instance finishes deallocation.
+  // 5. [Thread B] NSUserDefaults finishes notifying observers by releasing the
+  //               observers it previously retained. This causes a crash because
+  //               the GTMLogLevelFilter instance has already been deallocated.
+  [self stopObservingUserDefaultsIfNeeded];
+}
+
+- (void)startObservingUserDefaultsIfNeeded {
+  if (userDefaults_) {
+    return;
+  }
+
+  // Keep a reference to standardUserDefaults, avoiding a crash if client code calls
+  // "NSUserDefaults resetStandardUserDefaults" which releases it from memory. We are still
+  // notified of changes through our instance. Note: resetStandardUserDefaults does not actually
+  // clear settings:
+  // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSUserDefaults_Class/index.html#//apple_ref/occ/clm/NSUserDefaults/resetStandardUserDefaults
+  // and so should only be called in test code if necessary.
+  userDefaults_ = [[NSUserDefaults standardUserDefaults] retain];
+  [userDefaults_ addObserver:self
+                  forKeyPath:kVerboseLoggingKey
+                     options:NSKeyValueObservingOptionInitial
+                     context:nil];
+}
+
+- (void)stopObservingUserDefaultsIfNeeded {
+  if (!userDefaults_) {
+    return;
+  }
+
+  [userDefaults_ removeObserver:self forKeyPath:kVerboseLoggingKey];
+  [userDefaults_ release];
+  userDefaults_ = nil;
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary *)change
                        context:(void *)context
 {
   if([keyPath isEqual:kVerboseLoggingKey]) {
-    verboseLoggingEnabled_ = IsVerboseLoggingEnabled(userDefaults_);
+    self.verboseLoggingEnabled = IsVerboseLoggingEnabled(userDefaults_);
   }
 }
 
@@ -585,7 +652,7 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
 @implementation GTMLogAllowedLevelFilter
 
 // Private designated initializer
-- (id)initWithAllowedLevels:(NSIndexSet *)levels {
+- (instancetype)initWithAllowedLevels:(NSIndexSet *)levels {
   self = [super init];
   if (self != nil) {
     allowedLevels_ = [levels retain];
@@ -603,7 +670,7 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
   return self;
 }
 
-- (id)init {
+- (instancetype)init {
   // Allow all levels in default init
   return [self initWithAllowedLevels:[NSIndexSet indexSetWithIndexesInRange:
              NSMakeRange(kGTMLoggerLevelUnknown,
@@ -624,7 +691,7 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
 
 @implementation GTMLogMininumLevelFilter
 
-- (id)initWithMinimumLevel:(GTMLoggerLevel)level {
+- (instancetype)initWithMinimumLevel:(GTMLoggerLevel)level {
   return [super initWithAllowedLevels:[NSIndexSet indexSetWithIndexesInRange:
              NSMakeRange(level,
                          (kGTMLoggerLevelAssert - level + 1))]];
@@ -635,7 +702,7 @@ static BOOL IsVerboseLoggingEnabled(NSUserDefaults *userDefaults) {
 
 @implementation GTMLogMaximumLevelFilter
 
-- (id)initWithMaximumLevel:(GTMLoggerLevel)level {
+- (instancetype)initWithMaximumLevel:(GTMLoggerLevel)level {
   return [super initWithAllowedLevels:[NSIndexSet indexSetWithIndexesInRange:
              NSMakeRange(kGTMLoggerLevelUnknown, level + 1)]];
 }

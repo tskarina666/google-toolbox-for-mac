@@ -35,7 +35,7 @@
 @synthesize otherObjectToLocalize = otherObjectToLocalize_;
 @synthesize yetAnotherObjectToLocalize = yetAnotherObjectToLocalize_;
 
-- (id)initWithBundle:(NSBundle *)bundle {
+- (instancetype)initWithBundle:(NSBundle *)bundle {
   if ((self = [super init])) {
     bundle_ = [bundle retain];
   }
@@ -59,7 +59,7 @@
   } else {
     _GTMDevLog(@"Expected an owner set for %@", self);
   }
-  // Clear the outlets.
+  // Clear the outlets (help break cycles/etc.)
   self.owner = nil;
   self.otherObjectToLocalize = nil;
   self.yetAnotherObjectToLocalize = nil;
